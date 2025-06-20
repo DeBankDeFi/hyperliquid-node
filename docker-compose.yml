@@ -5,7 +5,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.17.81.0/24
+        - subnet: 10.17.89.0/24
 
 services:
   node:
@@ -35,6 +35,8 @@ services:
       - /data/hyper:/home/hluser/hl/data
 
   pruner:
+    networks:
+      - hyperevm-mainnet
     restart: unless-stopped
     build: ./pruner
     volumes:
