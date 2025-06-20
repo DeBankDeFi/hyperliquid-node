@@ -34,8 +34,8 @@ services:
     volumes:
       - /data/hyper:/home/hluser/hl/data
 
-  # pruner:
-  #   restart: unless-stopped
-  #   build: ./pruner
-  #   volumes:
-  #     - /data/hyperliquid:/home/hluser/hl/data
+  pruner:
+    restart: unless-stopped
+    build: ./pruner
+    volumes:
+      - /data/hyper:/home/hluser/hl/data
