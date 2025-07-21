@@ -109,6 +109,11 @@ For more information about examples and all the data types that can be written, 
     ./hl-node --chain Mainnet translate-abci-state ~/hl/data/periodic_abci_states/{date}/{height}.rmp /tmp/out.json
     ```
 
+  To compute L4 book snapshots (full onchain order information) from a state snapshot file:
+    ```bash
+    ./hl-node --chain <chain> compute-l4-snapshots <abci-state-path> <out-path>
+    ```
+
 ---
 
 ## Flags
@@ -116,17 +121,19 @@ For more information about examples and all the data types that can be written, 
 When running validators or non-validators, you can use the following flags. The data schemas for the output data are documented [here](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/nodes/l1-data-schemas).
 
 - `--write-trades`: Streams trades to `~/hl/data/node_trades/hourly/{date}/{hour}`.
-- `--write-fills`: Streams fills in the API fills format to `~/hl/data/node_fills/hourly/{date}/{hour}`. This overrides `--write-trades` if both are set.
-- `--write-order-statuses`: Writes every L1 order status to `~/hl/data/node_order_statuses/hourly/{date}/{hour}`. (Note that orders can be a substantial amount of data.)
+- `--write-fills`: Streams fills in the API fills format to `~/hl/data/node_fills/hourly/{date}/{hour}`. Also streams TWAP statuses to `~/hl/data/node_twap_statuses/{date}/{hour}`. This overrides `--write-trades` if both are set.
+- `--write-order-statuses`: Writes every L1 order status to `~/hl/data/node_order_statuses/hourly/{date}/{hour}`. Note that orders can be a substantial amount of data.
+- `--write-raw-book-diffs`: Writes every L1 order diff to `~/hl/data/node_raw_book_diffs/hourly/{date}/{hour}`. Note that raw book diffs can be a substantial amount of data.
 - `--write-misc-events`: Writes miscellaneous event data to `~/hl/data/misc_events/hourly/{date}/{hour}`. See [docs](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/nodes/reading-l1-data#miscellaneous-events) for more details.
+- `--batch-by-block`: Writes the above files with one block per line instead of one event per line. The batched data schema is `{local_time, block_time, block_number, events}`, where `events` is a list.
 - `--replica-cmds-style`: Configures what is written to `~/hl/data/replica_cmds/{start_time}/{date}/{height}`.
   Options:
   - `actions` (default) – only actions
   - `actions-and-responses` – both actions and responses
   - `recent-actions` – only preserves the two latest height files
-- `--compute-l4-snapshots <abci-state-fln> <out-fln>`: Outputs the order book with all order information from `<abci-state-fln>` and outputs it to `<out-fln>`
 - `--disable-output-file-buffering`: Flush each line immediately when writing output files. This reduces latency but leads to more disk IO operations.
 - `--serve-eth-rpc`: Enables the EVM RPC (see next section).
+- `--serve-info`: Enables local HTTP server to handle info requests (see next section).
 
 For example, to run a non-validator with all flags enabled:
 ```bash
@@ -137,9 +144,9 @@ For example, to run a non-validator with all flags enabled:
 
 ---
 
-## EVM
+## EVM and Info servers
 
-Enable the EVM RPC by adding the `--serve-eth-rpc` flag:
+Enable the EVM JSON-RPC by adding the `--serve-eth-rpc` flag:
 ```bash
 ~/hl-visor run-non-validator --serve-eth-rpc
 ```
@@ -148,6 +155,48 @@ Once running, you can send RPC requests. For example, to retrieve the latest blo
 ```bash
 curl -X POST --header 'Content-Type: application/json' --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest",false],"id":1}' http://localhost:3001/evm
 ```
+
+Similarly, `--serve-info` enables a local server at `http://localhost:3001/info` to handle info requests with the API request/response format.
+See [docs](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint) for more details.
+Running a local info server can help with rate limits and reduces trust assumptions on external operators.
+Currently the local server only supports a subset of requests that are entirely a function of local state. In particular, historical time series queries and websockets are not currently supported. The `--write-*` flags on the node can be used for historical and streaming purposes.
+
+The currently supported info requests on the local server are
+```
+    meta
+    spotMeta
+    clearinghouseState
+    spotClearinghouseState
+    openOrders
+    exchangeStatus
+    frontendOpenOrders
+    liquidatable
+    activeAssetData
+    maxMarketOrderNtls
+    vaultSummaries
+    userVaultEquities
+    leadingVaults
+    extraAgents
+    subAccounts
+    userFees
+    userRateLimit
+    spotDeployState
+    perpDeployAuctionStatus
+    delegations
+    delegatorSummary
+    maxBuilderFee
+    userToMultiSigSigners
+    userRole
+    perpsAtOpenInterestCap
+    validatorL1Votes
+    marginTable
+    perpDexs
+    webData2 (does not compute assetCtxs, which do not depend on the user)
+```
+
+Some info requests such as `l2Book` are not currently supported, as they are only indexed by a small number of assets and can be easily polled or subscribed to within the standard rate limits.
+
+To ensure that the server information is up to date, `exchangeStatus` can be pinged periodically to compare L1 and local timestamps. The server information can be ignored when the L1 timestamp returned is sufficiently stale.
 
 > **This applies for both Testnet and Mainnet.**
 
@@ -280,14 +329,14 @@ Make sure ports 4000-4010 are open to other validators. (Currently, only ports 4
 >   ./hl-node --chain Mainnet run-validator
 >   ```
 
-For faster bootstrapping, use a known reliable peer:
+For faster bootstrapping, use a known reliable peer. `reserved_peer_ips` can be set by the peer to always allow incoming connections from specific IPs.
 - **Testnet:**
   ```bash
-  echo '{ "root_node_ips": [{"Ip": "1.2.3.4"}], "try_new_peers": false, "chain": "Testnet" }' > ~/override_gossip_config.json
+  echo '{ "root_node_ips": [{"Ip": "1.2.3.4"}], "try_new_peers": false, "chain": "Testnet", "reserved_peer_ips": [] }' > ~/override_gossip_config.json
   ```
 - **Mainnet:**
   ```bash
-  echo '{ "root_node_ips": [{"Ip": "1.2.3.4"}], "try_new_peers": false, "chain": "Mainnet" }' > ~/override_gossip_config.json
+  echo '{ "root_node_ips": [{"Ip": "1.2.3.4"}], "try_new_peers": false, "chain": "Mainnet", "reserved_peer_ips": ["5.6.7.8"] }' > ~/override_gossip_config.json
   ```
 
 ### Begin Validating
@@ -340,6 +389,12 @@ It is recommended that validators set up an alerting system to maintain optimal 
   ```
 
 For **Mainnet**, use a similar configuration (with keys/channels specific to Mainnet if needed).
+
+### Sentry nodes
+
+Validators should dedicate most of their machine's resources to run consensus instead of serving many non-validators or running expensive local servers.
+A validator may connect up to two non-validator peers by specifying their IPs as `"sentry_ips": ["1.2.3.4", "5.6.7.8"]` in ~/hl/hyperliquid_data/node_config.json.
+Sentry nodes should be run by the validator themselves, and can be used as public root peers, API servers, EVM RPCs, etc.
 
 ---
 
@@ -395,21 +450,19 @@ Other validator profile options include:
 The community runs several independent root peers for non-validators to connect to on Mainnet. To run a non-validator on Mainnet, add at least one of these IP addresses to your `~/override_gossip_config.json`:
 ```
 operator_name,root_ips
-NodeOps,35.213.122.164
-NodeOps,35.213.89.139
 ASXN,20.188.6.225
 ASXN,74.226.182.22
 B-Harvest,180.189.55.18
 B-Harvest,180.189.55.19
 Nansen x HypurrCollective,46.105.222.166
 Nansen x HypurrCollective,91.134.41.52
-Hypurrscan,57.180.50.253
+Hypurrscan,13.230.78.76
 Hypurrscan,54.248.41.39
 Infinite Field,52.68.71.160
 Infinite Field,13.114.116.44
 LiquidSpirit x Rekt Gang,199.254.199.190
 LiquidSpirit x Rekt Gang,199.254.199.247
-Imperator.co,45.32.32.21
+Imperator.co,23.81.40.69
 Imperator.co,157.90.207.92
 Enigma,148.251.76.7
 Enigma,109.123.230.189
@@ -423,8 +476,8 @@ Hyperbeat x P2P.org x Hypio,199.254.199.12
 Hyperbeat x P2P.org x Hypio,199.254.199.54
 Luganodes,45.250.255.111
 Luganodes,109.94.99.131
-HypurrCorea: SKYGG x DeSpread,47.74.39.46
-HypurrCorea: SKYGG x DeSpread,8.211.133.129
+HypurrCorea: SKYGG x DeSpread,8.220.222.129
+HypurrCorea: SKYGG x DeSpread,8.220.213.65
 ```
 
 ---
