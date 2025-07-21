@@ -27,12 +27,14 @@ services:
       - --replica-cmds-style
       - recent-actions
       - --serve-eth-rpc
+      - --serve-info
     ports:
       - 4001:4001
       - 4002:4002
       - 8695:3001
     volumes:
       - /data/hyper:/home/hluser/hl/data
+      - ./override_gossip_config.json:/home/hluser/override_gossip_config.json
 
   pruner:
     networks:
