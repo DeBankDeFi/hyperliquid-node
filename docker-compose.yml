@@ -8,6 +8,23 @@ networks:
         - subnet: 10.17.89.0/24
 
 services:
+  jrpcx:
+    networks:
+      - hyperevm-mainnet
+    restart: unless-stopped
+    stop_grace_period: 60s
+    image: 294354037686.dkr.ecr.ap-northeast-1.amazonaws.com/jrpcx:v0.25.0
+    ports:
+      - 8695:9545
+      - 9268:9268
+    volumes:
+      - ./jrpcx.yml:/app/config.yml
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: '4G'
+    command: ["/app/jrpcx", "run", "-c", "/app/config.yml"]
   node:
     networks:
       - hyperevm-mainnet
@@ -31,9 +48,9 @@ services:
     ports:
       - 4001:4001
       - 4002:4002
-      - 8695:3001
+      - 8696:3001
     volumes:
-      - /data/hyper:/home/hluser/hl/data
+      - /data/hyper:/home/hluser/hl
       - ./override_gossip_config.json:/home/hluser/override_gossip_config.json
 
   pruner:
@@ -42,4 +59,4 @@ services:
     restart: unless-stopped
     build: ./pruner
     volumes:
-      - /data/hyper:/home/hluser/hl/data
+      - /data/hyper:/home/hluser/hl
