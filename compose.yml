@@ -1,3 +1,9 @@
+networks:
+  hyperliquid:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.17.89.0/24
 
 configs:
   jrpcx_config:
@@ -11,7 +17,7 @@ configs:
       enable_pprof: true
 
       #native_node_url: https://rpc.hyperliquid.xyz/evm
-      native_node_url: http://localhost:8545
+      native_node_url: http://localhost:8545/evm
       official_node_url: https://rpc.hyperliquid.xyz/evm
 
       # observability configurations.
@@ -42,13 +48,17 @@ configs:
 
 services:
   jrpcx:
-    network_mode: host
+    networks:
+      - hyperliquid
     restart: unless-stopped
     stop_grace_period: 5m
     image: 294354037686.dkr.ecr.ap-northeast-1.amazonaws.com/jrpcx:v0.26.0
     configs:
       - source: jrpcx_config
         target: /app/config.yml
+    ports:
+      - 9545:9545
+      - 9268:9268
     deploy:
       resources:
         limits:
@@ -57,7 +67,8 @@ services:
     command: ["/app/jrpcx", "run", "-c", "/app/config.yml"]
 
   node:
-    network_mode: host
+    networks:
+      - hyperliquid
     stop_grace_period: 5m
     deploy:
       resources:
@@ -67,6 +78,10 @@ services:
     restart: unless-stopped
     build: .
     entrypoint: "/home/hluser/hl-visor"
+    ports:
+      - 8545:3001
+      - 4001:4001
+      - 4002:4002
     environment:
       - RUST_BACKTRACE=full
     command:
@@ -75,16 +90,13 @@ services:
       - recent-actions
       - --serve-eth-rpc
       - --serve-info
-    ports:
-      - 4001:4001
-      - 4002:4002
-      - 8545:3001
     volumes:
       - /data/hyper:/home/hluser/hl
       - ./override_gossip_config.json:/home/hluser/override_gossip_config.json
 
   pruner:
-    network_mode: host
+    networks:
+      - hyperliquid
     restart: unless-stopped
     build: ./pruner
     volumes:
