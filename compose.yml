@@ -1,7 +1,7 @@
 name: "hyperliquid"
 
 networks:
-  hyperevm-mainnet:
+  hyperliquid:
     ipam:
       driver: default
       config:
@@ -10,9 +10,9 @@ networks:
 services:
   jrpcx:
     networks:
-      - hyperevm-mainnet
+      - hyperliquid
     restart: unless-stopped
-    stop_grace_period: 60s
+    stop_grace_period: 5m
     image: 294354037686.dkr.ecr.ap-northeast-1.amazonaws.com/jrpcx:v0.25.0
     ports:
       - 8695:9545
@@ -27,7 +27,7 @@ services:
     command: ["/app/jrpcx", "run", "-c", "/app/config.yml"]
   node:
     networks:
-      - hyperevm-mainnet
+      - hyperliquid
     stop_grace_period: 5m
     deploy:
       resources:
@@ -55,7 +55,7 @@ services:
 
   pruner:
     networks:
-      - hyperevm-mainnet
+      - hyperliquid
     restart: unless-stopped
     build: ./pruner
     volumes:

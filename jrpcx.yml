@@ -25,18 +25,17 @@ block_interval: 10
 enable_pprof: true
 
 # native_node_url Web3 JSON-RPC endpoint of native node.
-#native_node_url: https://rpc.hyperliquid.xyz/evm #http://172.21.1.130:8545/
+#native_node_url: https://rpc.hyperliquid.xyz/evm
 native_node_url: https://mixjj7dhaf.execute-api.ap-northeast-1.amazonaws.com/hyperliquid
 
 # official_node_url Web3 JSON-RPC endpoint of official node.
-#official_node_url: https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161
 official_node_url: https://rpc.hyperliquid.xyz/evm
 
 # observability configurations.
 observability:
   static_resource:
     chain_id: hyper
-    node: hybrid-h3
+    node: hybrid-a1
     group: state
   log:
     enable: true
