@@ -68,7 +68,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8'
+          cpus: '16'
           memory: '120G'
     restart: unless-stopped
     build: .
