@@ -69,7 +69,7 @@ services:
       resources:
         limits:
           cpus: '8'
-          memory: '24G'
+          memory: '120G'
     restart: unless-stopped
     build: .
     entrypoint: "/home/hluser/hl-visor"
