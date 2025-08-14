@@ -15,6 +15,7 @@ configs:
       block_interval: 10
       enable_pprof: true
 
+      native_node_url: http://node:3001/evm
       official_node_url: https://rpc.hyperliquid.xyz/evm
 
       # observability configurations.
@@ -45,15 +46,13 @@ services:
       - hyperliquid
     restart: unless-stopped
     stop_grace_period: 5m
-    image: 294354037686.dkr.ecr.ap-northeast-1.amazonaws.com/jrpcx:1d73a6bf
+    image: 294354037686.dkr.ecr.ap-northeast-1.amazonaws.com/jrpcx:v0.26.0
     configs:
       - source: jrpcx_config
         target: /app/config.yml
     ports:
       - 9545:9545
       - 9268:9268
-    environment:
-      - NAVTIVE_NODE_URL=http://node:3001/evm
     deploy:
       resources:
         limits:
