@@ -15,8 +15,6 @@ configs:
       block_interval: 10
       enable_pprof: true
 
-      #native_node_url: https://rpc.hyperliquid.xyz/evm
-      native_node_url: http://localhost:8545/evm
       official_node_url: https://rpc.hyperliquid.xyz/evm
 
       # observability configurations.
@@ -54,6 +52,8 @@ services:
     ports:
       - 9545:9545
       - 9268:9268
+    environment:
+      - NAVTIVE_NODE_URL=http://node:3001/evm
     deploy:
       resources:
         limits:
