@@ -11,7 +11,6 @@ configs:
       service_name: blockchain-hyper
       chain_id: hyper
       rpc_listen: :9545
-      forward_proxy: false
       internal_api_listen: :9268
       block_interval: 10
       enable_pprof: true
@@ -25,7 +24,7 @@ configs:
         static_resource:
           chain_id: hyper
           node: hybrid-a1
-          group: state
+          group: data
         log:
           enable: true
           endpoint: fluent-bit-tcp://prod-k8-jrpcx-fluent-bit-37e181d705609ecd.elb.ap-northeast-1.amazonaws.com:5170
@@ -41,10 +40,6 @@ configs:
             rpc_methods: {'eth_call': 1000}
         rpc_cache:
           enable: true
-        method_name_checker:
-          enable: false
-          regexp:
-          denied_regexp:
 
 services:
   jrpcx:
