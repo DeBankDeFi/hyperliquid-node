@@ -1,6 +1,7 @@
 {
     "root_node_ips":
       [
+        {"Ip": "43.206.84.188"},
         {"Ip": "79.127.159.174"}
       ],
       "try_new_peers": false,

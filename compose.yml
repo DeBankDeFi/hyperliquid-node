@@ -22,8 +22,6 @@ configs:
       observability:
         static_resource:
           chain_id: hyper
-          node: hybrid-a1
-          group: data
         log:
           enable: true
           endpoint: fluent-bit-tcp://prod-k8-jrpcx-fluent-bit-37e181d705609ecd.elb.ap-northeast-1.amazonaws.com:5170
