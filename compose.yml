@@ -18,6 +18,12 @@ configs:
       native_node_url: http://node:3001/evm
       official_node_url: https://rpc.hyperliquid.xyz/evm
 
+      hyperliquid_info_server:
+        enabled: true
+        listen: :9546
+        native_url: http://172.21.54.1:8545/info
+        official_url: https://api.hyperliquid.xyz/info
+
       # observability configurations.
       observability:
         static_resource:
@@ -44,7 +50,7 @@ services:
       - hyperliquid
     restart: unless-stopped
     stop_grace_period: 5m
-    image: 294354037686.dkr.ecr.ap-northeast-1.amazonaws.com/jrpcx:v0.26.0
+    image: 294354037686.dkr.ecr.ap-northeast-1.amazonaws.com/jrpcx:v0.26.2
     configs:
       - source: jrpcx_config
         target: /app/config.yml
