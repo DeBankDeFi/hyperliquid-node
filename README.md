@@ -497,7 +497,7 @@ A list of recently available peers can be queried via the API:
 curl -X POST --header "Content-Type: application/json" --data '{ "type": "gossipRootIps" }' https://api.hyperliquid.xyz/info
 ```
 
-The validator community also runs several independent root peers for non-validators to connect to on Mainnet. 
+The validator community also runs several independent root peers for non-validators to connect to on Mainnet.
 
 | Operator                      | Root IP         | Location       |
 | ----------------------------- | --------------- | -------------- |
@@ -505,14 +505,14 @@ The validator community also runs several independent root peers for non-validat
 | ASXN                          | 64.31.51.137    | Japan          |
 | B-Harvest                     | 180.189.55.18   | South Korea    |
 | B-Harvest                     | 180.189.55.19   | South Korea    |
-| Nansen x HypurrCollective     | 46.105.222.166  | France         |
-| Nansen x HypurrCollective     | 91.134.41.52    | France         |
+| Nansen x HypurrCollective     | 34.84.25.59     | Japan          |
+| Nansen x HypurrCollective     | 34.146.230.150  | Japan          |
 | Hypurrscan                    | 13.230.78.76    | Japan          |
 | Hypurrscan                    | 54.248.41.39    | Japan          |
 | Infinite Field                | 52.68.71.160    | Japan          |
 | Infinite Field                | 13.114.116.44   | Japan          |
-| LiquidSpirit x Rekt Gang      | 79.127.159.173 | Japan          |
-| LiquidSpirit x Rekt Gang      | 79.127.159.174 | Japan          |
+| LiquidSpirit x Rekt Gang      | 79.127.159.173  | Japan          |
+| LiquidSpirit x Rekt Gang      | 79.127.159.174  | Japan          |
 | Imperator.co                  | 23.81.40.69     | Japan          |
 | Imperator.co                  | 157.90.207.92   | Germany        |
 | Enigma                        | 148.251.76.7    | Germany        |
@@ -521,7 +521,7 @@ The validator community also runs several independent root peers for non-validat
 | TMNT                          | 31.223.196.238  | Japan          |
 | HyperStake                    | 91.134.71.237   | France         |
 | HyperStake                    | 57.129.140.247  | United Kingdom |
-| ValiDAO                       | 160.202.131.51  | Germany        |
+| ValiDAO                       | 67.213.123.85   | Japan          |
 | ValiDAO                       | 72.46.87.141    | Singapore      |
 | Hyperbeat x P2P.org x Hypio   | 199.254.199.12  | Japan          |
 | Hyperbeat x P2P.org x Hypio   | 199.254.199.54  | Japan          |
@@ -529,8 +529,10 @@ The validator community also runs several independent root peers for non-validat
 | Luganodes                     | 109.94.99.131   | Japan          |
 | HypurrCorea: SKYGG x DeSpread | 23.81.41.3      | Japan          |
 | HypurrCorea: SKYGG x DeSpread | 15.235.231.247  | Singapore      |
-| Purrposeful x HyBridge x PiP  | 144.168.36.162  | Japan          |
-| Purrposeful x HyBridge x PiP  | 181.41.140.106  | Japan          |
+| Purrposeful x HyBridge x PiP  | 199.254.199.48  | Japan          |
+| Purrposeful x HyBridge x PiP  | 199.254.199.52  | Japan          |
+| Kinetiq x Hyperion            | 34.146.1.144    | Japan          |
+| Kinetiq x Hyperion            | 15.235.232.101  | Singapore      |
 
 ---
 
