@@ -11,12 +11,23 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import pymysql
+except ImportError:  # pragma: no cover
+    pymysql = None
+
 
 CONTAINER_NAME = os.environ.get("HL_NODE_CONTAINER", "hyperliquid-node-node-1")
 DOCKER_BIN = os.environ.get("HL_DOCKER_BIN", "docker")
 REFERRER_ADDRESS = "0xAd9bE64fD7a35d99a138b87CB212BAefbCDCf045"
 SNAPSHOT_PATH = os.environ.get("HL_REFERRER_SNAPSHOT", "/tmp/referrer")
 CSV_OUTPUT_PATH = Path(os.environ.get("HL_REFERRER_CSV", "/tmp/referrer.csv"))
+DB_HOST = os.environ.get("HL_DB_HOST")
+DB_PORT = os.environ.get("HL_DB_PORT")
+DB_USER = os.environ.get("HL_DB_USER")
+DB_PASSWORD = os.environ.get("HL_DB_PASSWORD")
+DB_NAME = os.environ.get("HL_DB_NAME")
+DB_TABLE = os.environ.get("HL_DB_TABLE", "referral_stats")
 
 
 def build_snapshot_command() -> str:
@@ -151,6 +162,118 @@ def write_csv(referrals: list[dict]) -> None:
             )
 
 
+def parse_float(value: object) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def get_db_config() -> dict | None:
+    if not DB_HOST:
+        return None
+
+    missing = [
+        name
+        for name, val in {
+            "HL_DB_USER": DB_USER,
+            "HL_DB_PASSWORD": DB_PASSWORD,
+            "HL_DB_NAME": DB_NAME,
+        }.items()
+        if not val
+    ]
+
+    if missing:
+        print(
+            "Skipping database sync; missing environment variables: "
+            + ", ".join(missing),
+            file=sys.stderr,
+        )
+        return None
+
+    try:
+        port = int(DB_PORT) if DB_PORT else 3306
+    except ValueError:
+        print(
+            f"Invalid HL_DB_PORT value '{DB_PORT}', defaulting to 3306",
+            file=sys.stderr,
+        )
+        port = 3306
+
+    return {
+        "host": DB_HOST,
+        "port": port,
+        "user": DB_USER,
+        "password": DB_PASSWORD,
+        "database": DB_NAME,
+        "table": DB_TABLE,
+    }
+
+
+def sync_to_db(referrals: list[dict]) -> None:
+    config = get_db_config()
+    if not config or not referrals:
+        return
+
+    if pymysql is None:
+        raise RuntimeError(
+            "pymysql is required for database sync. Install it or unset HL_DB_HOST."
+        )
+
+    rows = []
+    for state in referrals:
+        user = state.get("user")
+        if not user:
+            continue
+        rows.append(
+            (
+                user,
+                parse_float(state.get("cumVlm")),
+                parse_float(state.get("cumRewardedFeesSinceReferred")),
+                parse_float(state.get("cumFeesRewardedToReferrer")),
+                parse_float(state.get("timeJoined")),
+            )
+        )
+
+    if not rows:
+        return
+
+    sql = (
+        f"INSERT INTO `{config['table']}` "
+        "(id, cum_vlm, cum_rewarded_fees_since_referred, cum_fees_rewarded_to_referrer, time_joined) "
+        "VALUES (%s, %s, %s, %s, %s) "
+        "ON DUPLICATE KEY UPDATE "
+        "cum_vlm = VALUES(cum_vlm), "
+        "cum_rewarded_fees_since_referred = VALUES(cum_rewarded_fees_since_referred), "
+        "cum_fees_rewarded_to_referrer = VALUES(cum_fees_rewarded_to_referrer), "
+        "time_joined = VALUES(time_joined)"
+    )
+
+    connection = pymysql.connect(
+        host=config["host"],
+        port=config["port"],
+        user=config["user"],
+        password=config["password"],
+        database=config["database"],
+        charset="utf8mb4",
+        autocommit=False,
+    )
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.executemany(sql, rows)
+        connection.commit()
+        print(
+            f"Upserted {len(rows)} rows into {config['database']}.{config['table']}",
+            file=sys.stderr,
+        )
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
 def main() -> int:
     try:
         trigger_snapshot()
@@ -163,6 +286,7 @@ def main() -> int:
                 file=sys.stderr,
             )
         write_csv(referrals)
+        sync_to_db(referrals)
     except Exception as exc:  # pragma: no cover
         print(f"referrer_snapshot failed: {exc}", file=sys.stderr)
         return 1
