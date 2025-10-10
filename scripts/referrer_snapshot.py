@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -17,13 +18,21 @@ SNAPSHOT_PATH = os.environ.get("HL_REFERRER_SNAPSHOT", "/tmp/referrer")
 CSV_OUTPUT_PATH = Path(os.environ.get("HL_REFERRER_CSV", "/tmp/referrer.csv"))
 
 
-SNAPSHOT_COMMAND = (
-    "curl -s -X POST 'http://127.0.0.1:3001/info' "
-    "--header 'Content-Type: application/json' "
-    "--data '{\n  "
-    "\"type\": \"fileSnapshot\",\n  \"request\": {\"type\": \"referrerStates\"},\n  "
-    f"\"outPath\": \"{SNAPSHOT_PATH}\",\n  \"includeHeightInOutput\": true\n}'"
-)
+def build_snapshot_command() -> str:
+    payload = json.dumps(
+        {
+            "type": "fileSnapshot",
+            "request": {"type": "referrerStates"},
+            "outPath": SNAPSHOT_PATH,
+            "includeHeightInOutput": True,
+        }
+    )
+    quoted_payload = shlex.quote(payload)
+    return (
+        "curl -s -X POST 'http://127.0.0.1:3001/info' "
+        "--header 'Content-Type: application/json' "
+        f"--data {quoted_payload}"
+    )
 
 
 def run_docker_exec(command: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -50,7 +59,7 @@ def trigger_snapshot() -> None:
     """Invoke the snapshot curl command inside the container."""
 
     try:
-        result = run_docker_exec(SNAPSHOT_COMMAND)
+        result = run_docker_exec(build_snapshot_command())
     except subprocess.CalledProcessError as exc:  # pragma: no cover
         print(
             f"Error running snapshot command: {exc.stderr.strip() if exc.stderr else exc}",
@@ -68,7 +77,7 @@ def fetch_snapshot_json() -> list:
     """Read the JSON snapshot from the container and return it as Python data."""
 
     try:
-        result = run_docker_exec(f"cat {SNAPSHOT_PATH}")
+        result = run_docker_exec(f"cat {shlex.quote(SNAPSHOT_PATH)}")
     except subprocess.CalledProcessError as exc:  # pragma: no cover
         print(
             f"Error reading {SNAPSHOT_PATH}: {exc.stderr.strip() if exc.stderr else exc}",
@@ -83,7 +92,7 @@ def fetch_snapshot_json() -> list:
     try:
         return json.loads(content)
     except json.JSONDecodeError as exc:
-        raise RuntimeError("Failed to parse JSON from /tmp/referrer") from exc
+        raise RuntimeError(f"Failed to parse JSON from {SNAPSHOT_PATH}") from exc
 
 
 def extract_referrals(snap: list) -> list[dict]:
