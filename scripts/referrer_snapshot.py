@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 CONTAINER_NAME = os.environ.get("HL_NODE_CONTAINER", "hyperliquid-node-node-1")
+DOCKER_BIN = os.environ.get("HL_DOCKER_BIN", "docker")
 REFERRER_ADDRESS = "0xAd9bE64fD7a35d99a138b87CB212BAefbCDCf045"
 SNAPSHOT_PATH = os.environ.get("HL_REFERRER_SNAPSHOT", "/tmp/referrer")
 CSV_OUTPUT_PATH = Path(os.environ.get("HL_REFERRER_CSV", "/tmp/referrer.csv"))
@@ -38,14 +39,7 @@ def build_snapshot_command() -> str:
 def run_docker_exec(command: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     """Run a command inside the container."""
 
-    docker_command = [
-        "docker",
-        "exec",
-        CONTAINER_NAME,
-        "bash",
-        "-c",
-        command,
-    ]
+    docker_command = ["sudo", DOCKER_BIN, "exec", CONTAINER_NAME, "bash", "-c", command]
 
     return subprocess.run(
         docker_command,
