@@ -132,9 +132,11 @@ When running validators or non-validators, you can use the following flags. The 
 - `--write-fills`: Streams fills in the API fills format to `~/hl/data/node_fills/hourly/{date}/{hour}`. Also streams TWAP statuses to `~/hl/data/node_twap_statuses/{date}/{hour}`. This overrides `--write-trades` if both are set.
 - `--write-order-statuses`: Writes every L1 order status to `~/hl/data/node_order_statuses/hourly/{date}/{hour}`. Note that orders can be a substantial amount of data.
 - `--write-raw-book-diffs`: Writes every L1 order diff to `~/hl/data/node_raw_book_diffs/hourly/{date}/{hour}`. Note that raw book diffs can be a substantial amount of data.
+- `--write-hip3-oracle-updates`: Writes every HIP-3 deployer oracle update action to `~/hl/data/hip3_oracle_updates/hourly/{date}/{hour}`. 
 - `--write-misc-events`: Writes miscellaneous event data to `~/hl/data/misc_events/hourly/{date}/{hour}`. See [docs](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/nodes/reading-l1-data#miscellaneous-events) for more details.
+- `--write-system-and-core-writer-actions`: Writes CoreWriter and HyperCore to HyperEVM transfer data indexed by HyperEVM tx hash and a unique system nonce to `~/hl/data/system_and_core_writer_actions/hourly/{date}/{hour}`. 
 - `--batch-by-block`: Writes the above files with one block per line instead of one event per line. The batched data schema is `{local_time, block_time, block_number, events}`, where `events` is a list.
-- `--stream-with-block-info`: Writes evemts as they are processed instead of once per block, but uses the same data schema as `--batch-by-block` to include block metadata.
+- `--stream-with-block-info`: Writes events as they are processed instead of once per block, but uses the same data schema as `--batch-by-block` to include block metadata.
 - `--replica-cmds-style`: Configures what is written to `~/hl/data/replica_cmds/{start_time}/{date}/{height}`.
   Options:
   - `actions` (default) – only actions
@@ -414,6 +416,23 @@ Once jailed, a validator can only be unjailed through the `unjailSelf` action (w
 
 If a validator repeatedly gets jailed, check stdout for signs of crashing or other unusual logs. Also, logs in `~/hl/data/node_logs/status/` may help diagnose latency or connectivity issues.
 
+### Publish Aligned Quote Asset Rate
+
+To support [aligned quote assets](https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/aligned-quote-assets) validators run [`aqa-publisher`](https://github.com/native-markets/aqa-publisher). This binary is a reference implementation of aligned quote asset rate publishing. Votes are published by active validators once per day at 22:00 UTC via [`validatorL1Stream`](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#validator-vote-on-risk-free-rate-for-aligned-quote-asset) action. Validators should publish this rate using a dedicated agent key, run on a separate machine from the validating node.
+
+```bash
+# Clone reference implementation
+git clone https://github.com/native-markets/aqa-publisher
+
+# Populate validator wallet and select network
+cd aqa-publisher && cp .env.example .env && vim .env
+
+# Schedule for background execution via Docker
+docker build -t aqa-publisher .   # Build image
+docker-compose up -d              # Run service
+docker-compose logs -f            # View logs
+```
+
 ### Alerting
 
 It is recommended that validators set up an alerting system to maintain optimal uptime.
@@ -508,14 +527,13 @@ The validator community also runs several independent root peers for non-validat
 | Nansen x HypurrCollective     | 34.84.25.59     | Japan          |
 | Nansen x HypurrCollective     | 34.146.230.150  | Japan          |
 | Hypurrscan                    | 13.230.78.76    | Japan          |
-| Hypurrscan                    | 54.248.41.39    | Japan          |
+| Hypurrscan                    | 52.195.133.97   | Japan          |
 | Infinite Field                | 52.68.71.160    | Japan          |
 | Infinite Field                | 13.114.116.44   | Japan          |
 | LiquidSpirit x Rekt Gang      | 79.127.159.173  | Japan          |
 | LiquidSpirit x Rekt Gang      | 79.127.159.174  | Japan          |
 | Imperator.co                  | 23.81.40.69     | Japan          |
 | Imperator.co                  | 157.90.207.92   | Germany        |
-| Enigma                        | 184.107.185.201 | Canada         |
 | Enigma                        | 109.123.230.189 | Japan          |
 | TMNT                          | 31.223.196.172  | Japan          |
 | TMNT                          | 31.223.196.238  | Japan          |
@@ -531,7 +549,6 @@ The validator community also runs several independent root peers for non-validat
 | HypurrCorea: SKYGG x DeSpread | 15.235.231.247  | Singapore      |
 | Purrposeful x HyBridge x PiP  | 199.254.199.48  | Japan          |
 | Purrposeful x HyBridge x PiP  | 199.254.199.52  | Japan          |
-| Kinetiq x Hyperion            | 34.180.72.122   | Japan          |
 | Kinetiq x Hyperion            | 15.235.232.101  | Singapore      |
 
 ---
