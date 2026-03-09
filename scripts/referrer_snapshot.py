@@ -143,6 +143,7 @@ def write_csv(referrals: list[dict]) -> None:
                 "cumRewardedFeesSinceReferred",
                 "cumFeesRewardedToReferrer",
                 "timeJoined",
+                "tokenToState",
             ],
         )
         writer.writeheader()
@@ -158,6 +159,9 @@ def write_csv(referrals: list[dict]) -> None:
                         "cumFeesRewardedToReferrer", ""
                     ),
                     "timeJoined": state.get("timeJoined", ""),
+                    "tokenToState": json.dumps(state.get("tokenToState", []))
+                        if state.get("tokenToState") is not None
+                        else "",
                 }
             )
 
@@ -225,6 +229,8 @@ def sync_to_db(referrals: list[dict]) -> None:
         user = state.get("user")
         if not user:
             continue
+        token_to_state = state.get("tokenToState")
+        token_to_state_str = json.dumps(token_to_state) if token_to_state is not None else None
         rows.append(
             (
                 user,
@@ -232,6 +238,7 @@ def sync_to_db(referrals: list[dict]) -> None:
                 parse_float(state.get("cumRewardedFeesSinceReferred")),
                 parse_float(state.get("cumFeesRewardedToReferrer")),
                 parse_float(state.get("timeJoined")),
+                token_to_state_str,
             )
         )
 
@@ -240,13 +247,14 @@ def sync_to_db(referrals: list[dict]) -> None:
 
     sql = (
         f"INSERT INTO `{config['table']}` "
-        "(id, cum_vlm, cum_rewarded_fees_since_referred, cum_fees_rewarded_to_referrer, time_joined) "
-        "VALUES (%s, %s, %s, %s, %s) "
+        "(id, cum_vlm, cum_rewarded_fees_since_referred, cum_fees_rewarded_to_referrer, time_joined, token_to_state) "
+        "VALUES (%s, %s, %s, %s, %s, %s) "
         "ON DUPLICATE KEY UPDATE "
         "cum_vlm = VALUES(cum_vlm), "
         "cum_rewarded_fees_since_referred = VALUES(cum_rewarded_fees_since_referred), "
         "cum_fees_rewarded_to_referrer = VALUES(cum_fees_rewarded_to_referrer), "
-        "time_joined = VALUES(time_joined)"
+        "time_joined = VALUES(time_joined), "
+        "token_to_state = VALUES(token_to_state)"
     )
 
     connection = pymysql.connect(
