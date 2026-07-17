@@ -42,7 +42,7 @@ DB_HOST = os.environ.get(
 )
 DB_PORT = os.environ.get("HL_DB_PORT", "3306")
 DB_USER = os.environ.get("HL_DB_USER", "node_team")
-DB_PASSWORD = os.environ.get("HL_DB_PASSWORD", "K0pRGshR5Qcb157MkaHo1fXj")
+DB_PASSWORD = os.environ.get("HL_DB_PASSWORD")
 DB_NAME = os.environ.get("HL_DB_NAME", "defi")
 DB_TABLE = os.environ.get("HL_DB_TABLE", "hl_trade_fills")
 
