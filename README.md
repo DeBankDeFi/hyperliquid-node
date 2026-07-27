@@ -5,7 +5,7 @@
 | Role          | vCPUs | RAM    | Storage    |
 | ------------- | ----- | ------ | ---------- |
 | Validator     | 32    | 128 GB | 1 TB SSD   |
-| Non-Validator | 16    | 64 GB  | 500 GB SSD |
+| Non-Validator | 16    | 128 GB | 500 GB SSD |
 
 Currently only Ubuntu 24.04 is supported.
 
@@ -129,7 +129,7 @@ For more information about examples and all the data types that can be written, 
 When running validators or non-validators, you can use the following flags. The data schemas for the output data are documented [here](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/nodes/l1-data-schemas).
 
 - `--write-trades`: Streams trades to `~/hl/data/node_trades/hourly/{date}/{hour}`.
-- `--write-fills`: Streams fills in the API fills format to `~/hl/data/node_fills/hourly/{date}/{hour}`. Also streams TWAP statuses to `~/hl/data/node_twap_statuses/{date}/{hour}`. This overrides `--write-trades` if both are set.
+- `--write-fills`: Streams fills in the API fills format to `~/hl/data/node_fills/hourly/{date}/{hour}`. Also streams TWAP statuses to `~/hl/data/node_twap_statuses/{date}/{hour}`. This overrides `--write-trades` if both are set. The `deployerFee` field is included for HIP-3 fills.
 - `--write-order-statuses`: Writes every L1 order status to `~/hl/data/node_order_statuses/hourly/{date}/{hour}`. Note that orders can be a substantial amount of data.
 - `--write-raw-book-diffs`: Writes every L1 order diff to `~/hl/data/node_raw_book_diffs/hourly/{date}/{hour}`. Note that raw book diffs can be a substantial amount of data.
 - `--write-hip3-oracle-updates`: Writes every HIP-3 deployer oracle update action to `~/hl/data/hip3_oracle_updates/hourly/{date}/{hour}`.
@@ -531,20 +531,18 @@ The validator community also runs several independent root peers for non-validat
 | Infinite Field                | 52.68.71.160    | Japan          |
 | Infinite Field                | 13.114.116.44   | Japan          |
 | LiquidSpirit x Rekt Gang      | 79.127.159.173  | Japan          |
-| LiquidSpirit x Rekt Gang      | 79.127.159.174  | Japan          |
+| LiquidSpirit x Rekt Gang      | 199.254.199.194 | Japan          |
 | Imperator.co                  | 23.81.40.69     | Japan          |
-| Imperator.co                  | 157.90.207.92   | Germany        |
+| Imperator.co                  | 212.95.58.62    | Germany        |
 | Enigma                        | 109.123.230.189 | Japan          |
 | TMNT                          | 31.223.196.172  | Japan          |
 | TMNT                          | 31.223.196.238  | Japan          |
-| HyperStake                    | 91.134.71.237   | France         |
-| HyperStake                    | 57.129.140.247  | United Kingdom |
 | ValiDAO                       | 67.213.123.85   | Japan          |
 | ValiDAO                       | 72.46.87.141    | Singapore      |
 | Hyperbeat x P2P.org x Hypio   | 199.254.199.12  | Japan          |
 | Hyperbeat x P2P.org x Hypio   | 199.254.199.54  | Japan          |
-| Luganodes                     | 45.250.255.111  | Japan          |
-| Luganodes                     | 109.94.99.131   | Japan          |
+| Luganodes                     | 35.74.132.113   | Japan          |
+| Luganodes                     | 35.79.2.229     | Japan          |
 | HypurrCorea: SKYGG x DeSpread | 23.81.41.3      | Japan          |
 | HypurrCorea: SKYGG x DeSpread | 15.235.231.247  | Singapore      |
 | Purrposeful x HyBridge x PiP  | 199.254.199.48  | Japan          |
@@ -552,6 +550,12 @@ The validator community also runs several independent root peers for non-validat
 | Kinetiq x Hyperion            | 15.235.232.101  | Singapore      |
 
 ---
+
+## Streaming mempool transactions
+
+Latency sensitive users can set `split_client_blocks: true` in `~/override_gossip_config.json` to stream uncommitted mempool transactions to `~/hl/data/mempool_txs/{date}`. These transactions are eagerly broadcasted by nodes before they are committed, so the file does not contain responses. To record this data, all peers between the node and the validating network must have `split_client_blocks` enabled. On a future network upgrade, this setting may be enabled for all nodes without the configuration option.
+
+By default, mempool transactions are streamed in random order to peers. Nodes can set `{"enabled": true}` in `~/hl/file_mod_time_tracker/node_gossip_priority_config.json` to respect the onchain gossip auction priority ordering.
 
 ## Troubleshooting
 
