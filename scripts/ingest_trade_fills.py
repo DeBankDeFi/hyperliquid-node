@@ -37,14 +37,12 @@ BUILDER_ADDRESS = os.environ.get(
     "HL_BUILDER_ADDRESS", "0xad9be64fd7a35d99a138b87cb212baefbcdcf045"
 ).lower()
 
-DB_HOST = os.environ.get(
-    "HL_DB_HOST", "rabby-aurora-mysql.cluster-c63u91bhml7c.ap-northeast-1.rds.amazonaws.com"
-)
+DB_HOST = os.environ.get("HL_DB_HOST")
 DB_PORT = os.environ.get("HL_DB_PORT", "3306")
-DB_USER = os.environ.get("HL_DB_USER", "node_team")
+DB_USER = os.environ.get("HL_DB_USER")
 DB_PASSWORD = os.environ.get("HL_DB_PASSWORD")
-DB_NAME = os.environ.get("HL_DB_NAME", "defi")
-DB_TABLE = os.environ.get("HL_DB_TABLE", "hl_trade_fills")
+DB_NAME = os.environ.get("HL_DB_NAME")
+DB_TABLE = os.environ.get("HL_DB_TABLE")
 
 BATCH_SIZE = int(os.environ.get("HL_BATCH_SIZE", "1000"))
 
